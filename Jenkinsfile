@@ -1,9 +1,9 @@
 pipeline {
-    // This block tells Jenkins to run the pipeline inside a container
-    // that has Docker and Docker Compose tools pre-installed.
     agent {
         docker {
             image 'docker/compose:latest'
+            // THIS IS THE NEW LINE TO ADD
+            tool 'docker-latest'
             args '-u root -v /var/run/docker.sock:/var/run/docker.sock'
         }
     }

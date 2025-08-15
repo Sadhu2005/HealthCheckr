@@ -1,17 +1,17 @@
 pipeline {
-    agent {
-        docker {
-            image 'docker/compose:latest'
-            // THIS IS THE NEW LINE TO ADD
-            tool 'docker-latest'
-            args '-u root -v /var/run/docker.sock:/var/run/docker.sock'
-        }
+    agent any
+
+    tools {
+        // This line finds the 'docker-latest' tool you configured
+        // in the UI and adds its commands to the system PATH.
+        tool 'docker-latest'
     }
 
     stages {
         stage('Build') {
             steps {
                 echo 'Building the Docker images...'
+                // This command will now work because the 'tools' block made it available.
                 sh 'docker compose build'
             }
         }

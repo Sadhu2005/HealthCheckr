@@ -2,7 +2,8 @@ import os
 import psycopg2
 import requests
 import time
-from psycopg2 import sql
+import smtplib
+from email.message import EmailMessage
 
 def get_db_connection():
     """Establishes a connection to the database."""
@@ -13,8 +14,16 @@ def get_db_connection():
         password=os.getenv("DB_PASSWORD", "password")
     )
 
+def column_exists(cur, table_name, column_name):
+    """Checks if a column exists in a table."""
+    cur.execute("""
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name=%s AND column_name=%s
+    """, (table_name, column_name))
+    return cur.fetchone() is not None
+
 def setup_database(conn):
-    """Creates the necessary tables if they don't already exist."""
+    """Creates/updates tables."""
     with conn.cursor() as cur:
         cur.execute("""
             CREATE TABLE IF NOT EXISTS websites (
@@ -31,60 +40,92 @@ def setup_database(conn):
                 response_time_ms INTEGER
             );
         """)
-        
-        # Add some sample websites if the table is empty
-        cur.execute("SELECT COUNT(*) FROM websites;")
-        if cur.fetchone()[0] == 0:
-            sample_sites = [('https://www.google.com',), ('https://www.github.com',), ('https://sadhujdeveloper.com',)]
-            cur.executemany("INSERT INTO websites (url) VALUES (%s) ON CONFLICT (url) DO NOTHING;", sample_sites)
-
+        if not column_exists(cur, 'websites', 'notification_email'):
+            cur.execute("ALTER TABLE websites ADD COLUMN notification_email TEXT;")
+        if not column_exists(cur, 'websites', 'last_status_code'):
+            cur.execute("ALTER TABLE websites ADD COLUMN last_status_code INTEGER;")
         conn.commit()
 
+def send_email_alert(recipient, url, status):
+    """Sends an email alert using SMTP credentials from environment variables."""
+    sender_email = os.getenv("SENDER_EMAIL")
+    password = os.getenv("SMTP_PASSWORD")
+    smtp_server = os.getenv("SMTP_SERVER")
+    smtp_port = int(os.getenv("SMTP_PORT", 587))
+
+    if not all([sender_email, password, smtp_server, smtp_port]):
+        print("SMTP environment variables not set. Skipping email.")
+        return
+
+    msg = EmailMessage()
+    if status == "DOWN":
+        msg['Subject'] = f"🚨 Website Down: {url}"
+        msg.set_content(f"The website {url} is currently down or returning an error.")
+    elif status == "UP":
+        msg['Subject'] = f"✅ Website Up: {url}"
+        msg.set_content(f"The website {url} has recovered and is now back online.")
+
+    msg['From'] = sender_email
+    msg['To'] = recipient
+
+    try:
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()
+            server.login(sender_email, password)
+            server.send_message(msg)
+            print(f"Alert email sent to {recipient} for {url}.")
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+
+
 def check_websites(conn):
-    """Fetches websites and records their health status."""
+    """Fetches websites, records their health, and sends alerts on status change."""
     with conn.cursor() as cur:
-        cur.execute("SELECT id, url FROM websites;")
+        cur.execute("SELECT id, url, notification_email, last_status_code FROM websites;")
         websites = cur.fetchall()
 
-        for website_id, url in websites:
+        for website_id, url, email, last_status in websites:
             status_code = None
             response_time_ms = -1
             try:
-                # Perform the check with a 5-second timeout
                 response = requests.get(url, timeout=5)
                 status_code = response.status_code
                 response_time_ms = int(response.elapsed.total_seconds() * 1000)
-            except requests.RequestException as e:
-                # Handle timeouts, connection errors, etc.
-                print(f"Error checking {url}: {e}")
-                status_code = 503  # Service Unavailable
+            except requests.RequestException:
+                status_code = 503
 
-            # Insert the result into the health_checks table
             cur.execute(
                 "INSERT INTO health_checks (website_id, status_code, response_time_ms) VALUES (%s, %s, %s);",
                 (website_id, status_code, response_time_ms)
             )
+            
+            if status_code != last_status:
+                cur.execute(
+                    "UPDATE websites SET last_status_code = %s WHERE id = %s;",
+                    (status_code, website_id)
+                )
+                print(f"Status changed for {url} from {last_status} to {status_code}.")
+                if email:
+                    # --- THIS IS THE CORRECTED LOGIC ---
+                    if status_code != 200 and (last_status == 200 or last_status is None):
+                        send_email_alert(email, url, "DOWN")
+                    elif status_code == 200 and last_status is not None and last_status != 200:
+                        send_email_alert(email, url, "UP")
+            
             print(f"Checked {url}: Status {status_code}, Response {response_time_ms}ms")
-        
         conn.commit()
 
 
 if __name__ == "__main__":
-    print("Starting health checker script...")
-    
-    # Wait for the database to be ready
+    print("Starting health checker script with email capability...")
     time.sleep(10)
-
     try:
         conn = get_db_connection()
         setup_database(conn)
-        
-        # Main loop to check websites periodically
         while True:
             check_websites(conn)
             print("Health check cycle completed. Waiting for 60 seconds...")
-            time.sleep(60) # Wait for 60 seconds before the next check
-
+            time.sleep(60)
     except psycopg2.OperationalError as e:
         print(f"Could not connect to the database: {e}")
     finally:

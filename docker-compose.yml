@@ -15,22 +15,30 @@ services:
       - POSTGRES_DB=healthchecks
 
   # The Background Checker Service
+  # In docker-compose.yml
+
+  # The Background Checker Service
+  # In docker-compose.yml
+
+  # The Background Checker Service
   checker:
     build:
-      # Tells Docker to use the checker/ folder as the source
       context: ./checker
-      # Specifies the path to our reusable Dockerfile
       dockerfile: ../Dockerfile.python
     container_name: healthcheckr_checker
-    # This command OVERRIDES the default CMD in the Dockerfile
     command: python checker.py
     environment:
-      - DB_HOST=db  # The hostname 'db' is the name of our database service
+      - DB_HOST=db
       - DB_NAME=healthchecks
       - DB_USER=user
       - DB_PASSWORD=password
+      - SMTP_SERVER=smtp.gmail.com
+      - SMTP_PORT=587
+      - SENDER_EMAIL=sadhuj2005@gmail.com
+      - SMTP_PASSWORD=ryvspqlkkxqcxxuk
+      # --- ADD THIS LINE ---
+      - PYTHONUNBUFFERED=1
     depends_on:
-      # This ensures the checker doesn't start until the database is ready
       - db
 
   # The Flask Web App Service

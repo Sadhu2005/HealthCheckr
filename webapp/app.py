@@ -1,7 +1,6 @@
 import os
 import psycopg2
 from psycopg2.extras import RealDictCursor
-# Import request, redirect, and url_for for form handling
 from flask import Flask, render_template, request, redirect, url_for
 
 app = Flask(__name__)
@@ -22,9 +21,11 @@ def dashboard():
     try:
         conn = get_db_connection()
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            # Query now includes the notification_email to display on the dashboard
             cur.execute("""
                 SELECT DISTINCT ON (w.url)
                     w.url,
+                    w.notification_email,
                     hc.status_code,
                     hc.response_time_ms,
                     hc.checked_at
@@ -39,26 +40,41 @@ def dashboard():
         
     return render_template('dashboard.html', checks=checks)
 
-# --- NEW FUNCTION TO HANDLE ADDING WEBSITES ---
 @app.route('/add', methods=['POST'])
 def add_website():
-    """Adds a new website to the database."""
-    # Get the URL from the submitted form data
+    """Adds a new website and notification email to the database."""
     url = request.form['url']
+    email = request.form.get('email')
+
     if url:
+        notification_email = email if email else None
         try:
             conn = get_db_connection()
             with conn.cursor() as cur:
-                # Insert the new URL, ignoring duplicates
-                cur.execute("INSERT INTO websites (url) VALUES (%s) ON CONFLICT (url) DO NOTHING;", (url,))
+                # If URL exists, update its email. Otherwise, insert new record.
+                cur.execute(
+                    "INSERT INTO websites (url, notification_email) VALUES (%s, %s) ON CONFLICT (url) DO UPDATE SET notification_email = EXCLUDED.notification_email;", 
+                    (url, notification_email)
+                )
             conn.commit()
             conn.close()
         except psycopg2.Error as e:
             print(f"Database error on insert: {e}")
             
-    # Redirect the user back to the main dashboard
     return redirect(url_for('dashboard'))
 
+@app.route('/delete/<path:url>')
+def delete_website(url):
+    """Deletes a website from the database."""
+    try:
+        conn = get_db_connection()
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM websites WHERE url = %s;", (url,))
+        conn.commit()
+        conn.close()
+    except psycopg2.Error as e:
+        print(f"Database error on delete: {e}")
+    return redirect(url_for('dashboard'))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

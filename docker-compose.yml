@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # The PostgreSQL Database Service
+  db:
+    image: postgres:14-alpine
+    container_name: healthcheckr_db
+    volumes:
+      # This line makes sure our database data persists even if the container is removed
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      # These credentials MUST match the defaults in our Python scripts
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=healthchecks
+
+  # The Background Checker Service
+  checker:
+    build:
+      # Tells Docker to use the checker/ folder as the source
+      context: ./checker
+      # Specifies the path to our reusable Dockerfile
+      dockerfile: ../Dockerfile.python
+    container_name: healthcheckr_checker
+    # This command OVERRIDES the default CMD in the Dockerfile
+    command: python checker.py
+    environment:
+      - DB_HOST=db  # The hostname 'db' is the name of our database service
+      - DB_NAME=healthchecks
+      - DB_USER=user
+      - DB_PASSWORD=password
+    depends_on:
+      # This ensures the checker doesn't start until the database is ready
+      - db
+
+  # The Flask Web App Service
+  webapp:
+    build:
+      context: ./webapp
+      dockerfile: ../Dockerfile.python
+    container_name: healthcheckr_webapp
+    ports:
+      # Maps port 5000 on your computer to port 5000 in the container
+      - "5000:5000"
+    environment:
+      - DB_HOST=db
+      - DB_NAME=healthchecks
+      - DB_USER=user
+      - DB_PASSWORD=password
+    depends_on:
+      - db
+
+# Declares the named volume we used for the database
+volumes:
+  postgres_data:

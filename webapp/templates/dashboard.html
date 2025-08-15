@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthCheckr Dashboard</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 2rem; }
+        h1 { color: #2c3e50; text-align: center; }
+        table { width: 100%; max-width: 900px; margin: 2rem auto; border-collapse: collapse; box-shadow: 0 2px 15px rgba(0,0,0,0.1); background: #fff; border-radius: 8px; overflow: hidden; }
+        th, td { padding: 12px 15px; text-align: left; }
+        thead { background-color: #34495e; color: #fff; }
+        tbody tr { border-bottom: 1px solid #ddd; }
+        tbody tr:nth-of-type(even) { background-color: #f9f9f9; }
+        .status { font-weight: bold; padding: 5px 10px; border-radius: 5px; color: #fff; text-align: center; }
+        .status-ok { background-color: #27ae60; }
+        .status-error { background-color: #c0392b; }
+        .status-unknown { background-color: #7f8c8d; }
+    </style>
+</head>
+<body>
+
+    <h1>HealthCheckr Dashboard</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Website URL</th>
+                <th>Status</th>
+                <th>Response Time (ms)</th>
+                <th>Last Checked</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for check in checks %}
+            <tr>
+                <td><a href="{{ check.url }}" target="_blank">{{ check.url }}</a></td>
+                <td>
+                    {% if check.status_code == 200 %}
+                        <span class="status status-ok">OK ({{ check.status_code }})</span>
+                    {% elif check.status_code %}
+                        <span class="status status-error">ERROR ({{ check.status_code }})</span>
+                    {% else %}
+                        <span class="status status-unknown">UNKNOWN</span>
+                    {% endif %}
+                </td>
+                <td>{{ check.response_time_ms }} ms</td>
+                <td>{{ check.checked_at.strftime('%Y-%m-%d %H:%M:%S') if check.checked_at }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4" style="text-align: center;">No websites are being monitored yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</body>
+</html>

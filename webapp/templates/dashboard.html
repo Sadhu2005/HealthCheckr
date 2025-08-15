@@ -6,8 +6,9 @@
     <title>HealthCheckr Dashboard</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 2rem; }
+        .container { max-width: 900px; margin: 0 auto; }
         h1 { color: #2c3e50; text-align: center; }
-        table { width: 100%; max-width: 900px; margin: 2rem auto; border-collapse: collapse; box-shadow: 0 2px 15px rgba(0,0,0,0.1); background: #fff; border-radius: 8px; overflow: hidden; }
+        table { width: 100%; margin: 2rem 0; border-collapse: collapse; box-shadow: 0 2px 15px rgba(0,0,0,0.1); background: #fff; border-radius: 8px; overflow: hidden; }
         th, td { padding: 12px 15px; text-align: left; }
         thead { background-color: #34495e; color: #fff; }
         tbody tr { border-bottom: 1px solid #ddd; }
@@ -16,11 +17,23 @@
         .status-ok { background-color: #27ae60; }
         .status-error { background-color: #c0392b; }
         .status-unknown { background-color: #7f8c8d; }
+        /* --- NEW STYLES FOR THE FORM --- */
+        .form-container { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 15px rgba(0,0,0,0.1); margin-bottom: 2rem; }
+        .form-container input[type="text"] { width: calc(100% - 100px); padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        .form-container button { width: 90px; padding: 10px; border: none; background-color: #3498db; color: white; border-radius: 4px; cursor: pointer; float: right; }
+        .form-container button:hover { background-color: #2980b9; }
     </style>
 </head>
 <body>
-
+<div class="container">
     <h1>HealthCheckr Dashboard</h1>
+
+    <div class="form-container">
+        <form action="/add" method="POST">
+            <input type="text" name="url" placeholder="https://example.com" required>
+            <button type="submit">Add Site</button>
+        </form>
+    </div>
 
     <table>
         <thead>
@@ -54,6 +67,6 @@
             {% endfor %}
         </tbody>
     </table>
-
+</div>
 </body>
 </html>

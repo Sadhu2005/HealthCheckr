@@ -4,9 +4,13 @@ A simple web page monitoring tool using Python, Docker, and Jenkins.
 
 HealthCheckr is a simple, containerized web application that monitors the health and response time of websites. It features a background worker to perform checks, a PostgreSQL database for storage, and a Flask-based web dashboard to display real-time status. The entire application is orchestrated with Docker Compose and includes a complete CI/CD pipeline configured with Jenkins.
 
-![HealthCheckr Dashboard Screenshot](https://i.imgur.com/L7E1WfK.png) 
-*(Suggestion: Take a nice screenshot of your final dashboard and replace this link!)*
+### ## 📸 Screenshots
 
+| HealthCheckr Dashboard | Jenkins Pipeline Success |
+| :---: | :---: |
+| ![Dashboard View](images/healthchekr1.png) | ![Jenkins Build](images/healthchekr2.png) |
+| **Adding a Site** | **Email Alert** |
+| ![Adding a Site](images/healthchekr3.png) | ![Email Alert Received](images/healthchekr4.jpeg) |
 ---
 
 ### ## ✨  Features

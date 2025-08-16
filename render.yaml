@@ -4,21 +4,16 @@ databases:
     plan: free
 
 services:
-  # The Flask web app, using your image from Docker Hub
+  # The Flask web app
   - type: web
     name: healthcheckr-webapp
     plan: free
     env: docker
     image:
       url: docker.io/silentlover/healthcheckr-webapp:latest
-    envVars:
-      - key: DATABASE_URL
-        fromService:
-          type: postgres # This must be 'postgres'
-          name: healthcheckr-db
-          property: connectionString
+    # The DATABASE_URL is now injected automatically by Render, so we remove it from here.
 
-  # The Python background checker, also using an image from Docker Hub
+  # The Python background checker
   - type: worker
     name: healthcheckr-checker
     plan: free
@@ -26,12 +21,7 @@ services:
     image:
       url: docker.io/silentlover/healthcheckr-checker:latest
     envVars:
-      - key: DATABASE_URL
-        fromService:
-          type: postgres # This must be 'postgres'
-          name: healthcheckr-db
-          property: connectionString
-      # Add your SMTP credentials for email alerts
+      # We only need to define our SMTP credentials. Render provides the database URL.
       - key: SMTP_SERVER
         value: smtp.gmail.com
       - key: SMTP_PORT

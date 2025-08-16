@@ -1,19 +1,15 @@
 databases:
-  # This section defines the managed PostgreSQL database
   - name: healthcheckr-db
     plan: free
 
 services:
-  # The Flask web app
   - type: web
     name: healthcheckr-webapp
     plan: free
     env: docker
     image:
       url: docker.io/silentlover/healthcheckr-webapp:latest
-    # The DATABASE_URL is now injected automatically by Render, so we remove it from here.
 
-  # The Python background checker
   - type: worker
     name: healthcheckr-checker
     plan: free
@@ -21,7 +17,6 @@ services:
     image:
       url: docker.io/silentlover/healthcheckr-checker:latest
     envVars:
-      # We only need to define our SMTP credentials. Render provides the database URL.
       - key: SMTP_SERVER
         value: smtp.gmail.com
       - key: SMTP_PORT
@@ -29,4 +24,4 @@ services:
       - key: SENDER_EMAIL
         value: your-email@gmail.com
       - key: SMTP_PASSWORD
-        value:   your-new-app-password
+        value: your-new-app-password

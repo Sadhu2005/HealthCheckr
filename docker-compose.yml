@@ -1,63 +1,52 @@
 version: '3.8'
 
 services:
-  # The PostgreSQL Database Service
   db:
     image: postgres:14-alpine
     container_name: healthcheckr_db
     volumes:
-      # This line makes sure our database data persists even if the container is removed
       - postgres_data:/var/lib/postgresql/data/
+    # Use variables from the .env file
     environment:
-      # These credentials MUST match the defaults in our Python scripts
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=healthchecks
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
 
-  # The Background Checker Service
-  # In docker-compose.yml
-
-  # The Background Checker Service
-  # In docker-compose.yml
-
-  # The Background Checker Service
   checker:
     build:
       context: ./checker
       dockerfile: ../Dockerfile.python
     container_name: healthcheckr_checker
     command: python checker.py
+    # Use variables from the .env file
     environment:
       - DB_HOST=db
-      - DB_NAME=healthchecks
-      - DB_USER=user
-      - DB_PASSWORD=password
-      - SMTP_SERVER=smtp.gmail.com
-      - SMTP_PORT=587
-      - SENDER_EMAIL=sadhuj2005@gmail.com
-      - SMTP_PASSWORD=ryvspqlkkxqcxxuk
-      # --- ADD THIS LINE ---
+      - DB_NAME=${POSTGRES_DB}
+      - DB_USER=${POSTGRES_USER}
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - SMTP_SERVER=${SMTP_SERVER}
+      - SMTP_PORT=${SMTP_PORT}
+      - SENDER_EMAIL=${SENDER_EMAIL}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
       - PYTHONUNBUFFERED=1
     depends_on:
       - db
 
-  # The Flask Web App Service
   webapp:
     build:
       context: ./webapp
       dockerfile: ../Dockerfile.python
     container_name: healthcheckr_webapp
     ports:
-      # Maps port 5000 on your computer to port 5000 in the container
       - "5000:5000"
+    # Use variables from the .env file
     environment:
       - DB_HOST=db
-      - DB_NAME=healthchecks
-      - DB_USER=user
-      - DB_PASSWORD=password
+      - DB_NAME=${POSTGRES_DB}
+      - DB_USER=${POSTGRES_USER}
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
     depends_on:
       - db
 
-# Declares the named volume we used for the database
 volumes:
   postgres_data:

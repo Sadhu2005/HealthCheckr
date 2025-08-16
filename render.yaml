@@ -40,6 +40,6 @@ services:
       - key: SMTP_PORT
         value: 587
       - key: SENDER_EMAIL
-        value: sadhu2005@gmail.com # <-- Add your real email
+        value:   # <-- Add your real email
       - key: SMTP_PASSWORD
-        value: ryvspqlkkxqcxxuk # <-- Add your real App Password
+        value:   # <-- Add your real App Password

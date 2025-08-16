@@ -1,23 +1,20 @@
-services:
-  # A PostgreSQL database on Render's free plan
-  - type: pserv
-    name: healthcheckr-db
+databases:
+  # This section defines the managed PostgreSQL database
+  - name: healthcheckr-db
     plan: free
-    postgres:
-      version: "14"
 
+services:
   # The Flask web app, using your image from Docker Hub
   - type: web
     name: healthcheckr-webapp
     plan: free
     env: docker
     image:
-      url: docker.io/silentlover/healthcheckr-webapp:latest # <-- Change username if needed
+      url: docker.io/silentlover/healthcheckr-webapp:latest
     envVars:
-      # Render automatically links this to the database service above
       - key: DATABASE_URL
         fromService:
-          type: pserv
+          type: postgres # This must be 'postgres'
           name: healthcheckr-db
           property: connectionString
 
@@ -27,11 +24,11 @@ services:
     plan: free
     env: docker
     image:
-      url: docker.io/silentlover/healthcheckr-checker:latest # <-- Change username if needed
+      url: docker.io/silentlover/healthcheckr-checker:latest
     envVars:
       - key: DATABASE_URL
         fromService:
-          type: pserv
+          type: postgres # This must be 'postgres'
           name: healthcheckr-db
           property: connectionString
       # Add your SMTP credentials for email alerts
@@ -40,6 +37,6 @@ services:
       - key: SMTP_PORT
         value: 587
       - key: SENDER_EMAIL
-        value:   # <-- Add your real email
+        value: your-email@gmail.com
       - key: SMTP_PASSWORD
-        value:   # <-- Add your real App Password
+        value: your-new-app-password

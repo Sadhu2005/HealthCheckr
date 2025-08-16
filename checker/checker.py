@@ -4,15 +4,24 @@ import requests
 import time
 import smtplib
 from email.message import EmailMessage
+import os
+import psycopg2
+import dj_database_url
 
 def get_db_connection():
     """Establishes a connection to the database."""
-    return psycopg2.connect(
-        host=os.getenv("DB_HOST", "localhost"),
-        database=os.getenv("DB_NAME", "healthchecks"),
-        user=os.getenv("DB_USER", "user"),
-        password=os.getenv("DB_PASSWORD", "password")
-    )
+    # Check for Render's DATABASE_URL first
+    if 'DATABASE_URL' in os.environ:
+        conn_params = dj_database_url.parse(os.environ['DATABASE_URL'])
+        return psycopg2.connect(**conn_params)
+    else:
+        # Fallback to our local Docker setup
+        return psycopg2.connect(
+            host=os.getenv("DB_HOST", "localhost"),
+            database=os.getenv("DB_NAME", "healthchecks"),
+            user=os.getenv("DB_USER", "user"),
+            password=os.getenv("DB_PASSWORD", "password")
+        )
 
 def column_exists(cur, table_name, column_name):
     """Checks if a column exists in a table."""

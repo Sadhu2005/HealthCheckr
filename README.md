@@ -6,10 +6,10 @@ HealthCheckr is a simple, containerized web application that monitors the health
 
 ### ## 📸 Screenshots
 
-| HealthCheckr Dashboard | Jenkins Pipeline Success |
+| HealthCheckr Dashboard | **Adding a Site** |
 | :---: | :---: |
 | ![Dashboard View](images/healthchekr1.png) | ![Jenkins Build](images/healthchekr2.png) |
-| **Adding a Site** | **Email Alert** |
+| **Jenkins Pipeline Success ** | **Email Alert** |
 | ![Adding a Site](images/healthchekr3.png) | ![Email Alert Received](images/healthchekr4.jpeg) |
 ---
 

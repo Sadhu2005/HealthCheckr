@@ -29,4 +29,4 @@ services:
       - key: SENDER_EMAIL
         value: your-email@gmail.com
       - key: SMTP_PASSWORD
-        value: your-new-app-password
+        value:   your-new-app-password
